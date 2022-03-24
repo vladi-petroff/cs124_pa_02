@@ -15,6 +15,8 @@
 #include <time.h>
 
 #include <fstream>
+#include <stdio.h>
+#include <string.h>
 
 using namespace std;
 
@@ -29,8 +31,6 @@ struct point{
     point(int x, int y) : x(x), y(y){};
 };
 
-
-//(x1, y1) are left lower vertexes
 vector<vector<ll>> trivial_mat_mult(int x1, int y1, int x2, int y2, int len) {
     vector<vector<ll>> ans(len);
     for(int i = 0; i < len; i++) {
@@ -56,7 +56,6 @@ void add_elements_inside(point p1, point p2, int len, int factor, int mat_number
     }
 }
 
-//vector<vector<ll>> strassen_mat_mult(int x1, int y1, int x2, int y2, int len, int split_point) {
 vector<vector<ll>> strassen_mat_mult(point p1, point p2, int len, int split_point) {
     if(len <= split_point) {
         return trivial_mat_mult(p1.x, p1.y, p2.x, p2.y, len);
@@ -76,20 +75,10 @@ vector<vector<ll>> strassen_mat_mult(point p1, point p2, int len, int split_poin
     point C(x1, mid_y1);
     point D(mid_x1, mid_y1);
 
-    // A: (x1, mid_y1)
-    // B: (mid_x1, mid_y1)
-    // C: (x1, y1)
-    // D: (mid_x1, y1)
-
     point E(x2, y2);
     point F(mid_x2, y2);
     point G(x2, mid_y2);
     point H(mid_x2, mid_y2);
-
-    // E: (x2, mid_y2)
-    // F:`(mid_x2, mid_y2)
-    // G: (x2, y2)
-    // H: (mid_x2, y2)
 
     add_elements_inside(F, H, len / 2, -1, 2);
     vector<vector<ll>> prod1 = strassen_mat_mult(A, F, len / 2, split_point);
@@ -151,44 +140,55 @@ vector<vector<ll>> strassen_mat_mult(point p1, point p2, int len, int split_poin
     return ans;
 }
 
-/*
- * int n;
-    cin >> n;
+ll create_graph(ld p, int n) {
     input1.resize(n), input2.resize(n);
-    srand(239);
     for (int i = 0; i < n; ++i) {
         input1[i].resize(n, 0);
         input2[i].resize(n, 0);
-//        input1[i][i] = 1;
         for (int j = 0; j < n; j++) {
-            input1[i][j] = rand() % 5;
-        }
-        for (int j = 0; j < n; j++) {
-            input2[i][j] = rand() % 5;
+            if (j != i) {
+                auto indicator = (long double) rand() / RAND_MAX;
+                if (indicator < p) {
+                    input1[i][j] = 1;
+                } else {
+                    input1[i][j] = 0;
+                }
+                input2[i][j] = input1[i][j];
+            }
         }
     }
-
-    clock_t tStart_trivial = clock();
-    vector<vector<ll>> res_trivial = trivial_mat_mult(0, 0, 0, 0, n);
-    double time_trivial = (double) (clock() - tStart_trivial) / CLOCKS_PER_SEC;
-    cout << time_trivial << endl;
-
-    int l = 2, r = n;
-    while(r - l > 1) {
-        int split = (r + l) / 2;
-        clock_t tStart = clock();
-        vector<vector<ll>> res_strassen = strassen_mat_mult(point(0,0), point(0, 0), n, split);
-        double time_strassen = (double)(clock() - tStart) / CLOCKS_PER_SEC;
-        if (time_strassen <= time_trivial) {
-            r = split;
-        } else {
-            l = split;
+    vector<vector<ll>> squared = strassen_mat_mult(point(0, 0), point(0,0), n, 64);
+    for(int i = 0; i < n; i++) {
+        for (int j = 0; j < n; ++j) {
+            input2[i][j] = squared[i][j];
         }
     }
-    cout << r << endl;
- */
+    vector<vector<ll>> cubed = strassen_mat_mult(point(0, 0), point(0,0), n, 64);
+    ll ans = 0;
+    for (int i = 0; i < n; ++i) {
+        ans += cubed[i][i];
+    }
+    return ans / 6;
+}
 
 int main(int argc, char **argv) {
+
+    //for triangle
+    if(!strcmp(argv[1], "triangle")) {
+        srand(239);
+        ld p = 0.01;
+        int tests = 10;
+        int n = 512;
+        cout << "theoretically: " << (n * (n - 1) * (n - 2) / 6) * p * p * p << endl;
+        cout << "experimentally: " << endl;
+        ld total_res = 0;
+        while(tests--){
+            ll res = create_graph(p, n);
+            cout << res << endl;
+            total_res += res;
+        }
+        cout << "average: " << total_res / 10 << endl;
+    }
 
     //for finding optimal split
     if(!strcmp(argv[1], "1")) {
@@ -271,25 +271,6 @@ int main(int argc, char **argv) {
         return 0;
     }
 }
-
-//        clock_t tStart_trivial = clock();
-//        vector<vector<ll>> res_trivial = trivial_mat_mult(0, 0, 0, 0, n);
-//        double time_trivial = (double) (clock() - tStart_trivial) / CLOCKS_PER_SEC;
-//        cout << time_trivial << endl;
-//
-//        int l = 2, r = n;
-//        while(r - l > 1) {
-//            int split = (r + l) / 2;
-//            clock_t tStart = clock();
-//            vector<vector<ll>> res_strassen = strassen_mat_mult(point(0,0), point(0, 0), n, split);
-//            double time_strassen = (double)(clock() - tStart) / CLOCKS_PER_SEC;
-//            if (time_strassen <= time_trivial) {
-//                r = split;
-//            } else {
-//                l = split;
-//            }
-//        }
-//        cout << r << endl;
 
 /*
 //flag 0 for initial task, flag 1 for runtime and values

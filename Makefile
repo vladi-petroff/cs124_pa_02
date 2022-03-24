@@ -1,11 +1,13 @@
 .PHONY: all clean
 
 CXX=g++
-CXXFLAGS=-std=c++17 -Wall -pedantic
+CXXFLAGS=-std=c++17 -Wall -pedantic -Wextra -lm -lpthread
+
+
 
 all: strassen
 
-strassen: src/main.cpp
+strassen: strassen.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -Iinclude $<
 
 clean:
