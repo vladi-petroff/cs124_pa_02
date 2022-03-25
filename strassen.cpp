@@ -171,7 +171,6 @@ ll count_triangles(ld p, int n) {
     return ans / 6;
 }
 
-
 int find_optimal_split(int dimension) {
     int n = 1;
     while (n < dimension) {
@@ -255,8 +254,14 @@ int main(int argc, char **argv) {
     //for triangle
     if(!strcmp(argv[1], "tr")) {
         ld p = 0.01;
-        int tests = 10;
-        int n = 512;
+        if(argc >= 3) {
+            p = stod(argv[2]);
+        }
+        int tests = 5;
+        if(argc >= 4) {
+            tests = stoi(argv[3]);
+        }
+        int n = 1024;
         cout << "theoretically: " << (n * (n - 1) * (n - 2) / 6) * p * p * p << endl;
         cout << "experimentally: " << endl;
         ld total_res = 0;
