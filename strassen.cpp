@@ -140,7 +140,7 @@ vector<vector<ll>> strassen_mat_mult(point p1, point p2, int len, int split_poin
     return ans;
 }
 
-ll create_graph(ld p, int n) {
+ll count_triangles(ld p, int n) {
     input1.resize(n), input2.resize(n);
     for (int i = 0; i < n; ++i) {
         input1[i].resize(n, 0);
@@ -171,61 +171,42 @@ ll create_graph(ld p, int n) {
     return ans / 6;
 }
 
+
+int find_optimal_split(int dimension) {
+    int n = 1;
+    while (n < dimension) {
+        n *= 2;
+    }
+    input1.resize(n), input2.resize(n);
+    for (int i = 0; i < n; ++i) {
+        input1[i].resize(n, 0), input2[i].resize(n, 0);
+        for (int j = 0; j < n; j++) {
+            input1[i][j] = rand() % 5;
+            input2[i][j] = rand() % 5;
+        }
+    }
+
+    clock_t tStart_trivial = clock();
+    vector<vector<ll>> res_trivial = trivial_mat_mult(0, 0, 0, 0, n);
+    double time_trivial = (double) (clock() - tStart_trivial) / CLOCKS_PER_SEC;
+
+    int l = 2, r = n;
+    while (r - l > 1) {
+        int split = (r + l) / 2;
+        clock_t tStart = clock();
+        vector<vector<ll>> res_strassen = strassen_mat_mult(point(0, 0), point(0, 0), n, split);
+        double time_strassen = (double) (clock() - tStart) / CLOCKS_PER_SEC;
+        if (time_strassen <= time_trivial) {
+            r = split;
+        } else {
+            l = split;
+        }
+    }
+    return r;
+}
+
 int main(int argc, char **argv) {
-
-    //for triangle
-    if(!strcmp(argv[1], "triangle")) {
-        srand(239);
-        ld p = 0.01;
-        int tests = 10;
-        int n = 512;
-        cout << "theoretically: " << (n * (n - 1) * (n - 2) / 6) * p * p * p << endl;
-        cout << "experimentally: " << endl;
-        ld total_res = 0;
-        while(tests--){
-            ll res = create_graph(p, n);
-            cout << res << endl;
-            total_res += res;
-        }
-        cout << "average: " << total_res / 10 << endl;
-    }
-
-    //for finding optimal split
-    if(!strcmp(argv[1], "1")) {
-        int n = stoi(argv[2]);
-        input1.resize(n), input2.resize(n);
-        srand(239);
-        for (int i = 0; i < n; ++i) {
-            input1[i].resize(n, 0);
-            input2[i].resize(n, 0);
-            for (int j = 0; j < n; j++) {
-                input1[i][j] = rand() % 5;
-            }
-            for (int j = 0; j < n; j++) {
-                input2[i][j] = rand() % 5;
-            }
-        }
-
-        clock_t tStart_trivial = clock();
-        vector<vector<ll>> res_trivial = trivial_mat_mult(0, 0, 0, 0, n);
-        double time_trivial = (double) (clock() - tStart_trivial) / CLOCKS_PER_SEC;
-        cout << time_trivial << endl;
-
-        int l = 2, r = n;
-        while (r - l > 1) {
-            int split = (r + l) / 2;
-            clock_t tStart = clock();
-            vector<vector<ll>> res_strassen = strassen_mat_mult(point(0, 0), point(0, 0), n, split);
-            double time_strassen = (double) (clock() - tStart) / CLOCKS_PER_SEC;
-            if (time_strassen <= time_trivial) {
-                r = split;
-            } else {
-                l = split;
-            }
-        }
-        cout << r << endl;
-        return 0;
-    }
+    srand(239);
 
     if(!strcmp(argv[1], "0")) {
         int dimension = stoi(argv[2]);
@@ -270,65 +251,34 @@ int main(int argc, char **argv) {
         }
         return 0;
     }
-}
 
-/*
-//flag 0 for initial task, flag 1 for runtime and values
-if(argc != 5) {
-    cout << "incorrect number of input variables (expected 3, got: " << argc - 1 << ")" << endl;
-    return 0;
-}
-
-if(strcmp(argv[1], "0") && strcmp(argv[1], "1") ) {
-    cout << "incorrect flag" << endl;
-    return 0;
-}
-
-int n = stoi(argv[2]), trials = stoi(argv[3]), dim = stoi(argv[4]);
-if(dim > 4 || dim == 2) {
-    cout << "incorrect dimension (possible values: 0, 2, 3, 4)" << endl;
-    return 0;
-}
-ld avrg = 0;
-if(!strcmp(argv[1], "0")) {
-
-    return 0;
-}
-
-if(!strcmp(argv[1], "1")) {
-    clock_t tStart = clock();
-    vector<ld> values;
-    map<string, double> times = {{"generate", 0}, {"sort", 0}, {"mst", 0}};
-    for(int test = 0; test < trials; test++) {
-        clock_t tStart1 = clock();
-
-        times["generate"] += (double) (clock() - tStart1) / CLOCKS_PER_SEC;
-        //printf("Time for generating graph: %.2fs\n", (double) (clock() - tStart1) / CLOCKS_PER_SEC);
-
-        clock_t tStart2 = clock();
-        sort(g.begin(), g.end());
-        times["sort"] += (double) (clock() - tStart2) / CLOCKS_PER_SEC;
-        //printf("Time for sorting graph: %.2fs\n", (double) (clock() - tStart2) / CLOCKS_PER_SEC);
-
-        clock_t tStart3 = clock();
-        ld ans = kruskal_mst(g, n);
-        times["mst"] += (double) (clock() - tStart3) / CLOCKS_PER_SEC;
-        //printf("Time for find MST (Kruskal): %.2fs\n", (double) (clock() - tStart3) / CLOCKS_PER_SEC);
-        values.push_back(ans);
+    //for triangle
+    if(!strcmp(argv[1], "tr")) {
+        ld p = 0.01;
+        int tests = 10;
+        int n = 512;
+        cout << "theoretically: " << (n * (n - 1) * (n - 2) / 6) * p * p * p << endl;
+        cout << "experimentally: " << endl;
+        ld total_res = 0;
+        while(tests--){
+            ll res = count_triangles(p, n);
+            cout << res << ", ";
+            total_res += res;
+        }
+        cout << endl << "average: " << total_res / 10 << endl;
     }
 
-    cout << "values:" << endl;
-    for (int i = 0; i < trials; ++i) {
-        avrg += values[i];
-        cout << values[i] << " ";
+    //for finding optimal split
+    if(!strcmp(argv[1], "spl")) {
+        if (argc >= 3) {
+            cout << find_optimal_split(stoi(argv[2])) << endl;
+            return 0;
+        } else {
+            vector<int> n_vec = {4, 8, 16, 32, 64, 128, 256, 512, 1024};
+            cout << "optimal values for different n: " << endl;
+            for(int n: n_vec) {
+                cout << "n = " << n << ": " << find_optimal_split(n) << endl;
+            }
+        }
     }
-    cout << endl << "Average weight = " << avrg / trials << endl;
-    printf("Time statistics: \n");
-    printf("Average time for generating graph: %.2fs\n", times["generate"] / trials);
-    printf("Average time for sorting graph: %.2fs\n", times["sort"] / trials);
-    printf("Average time for find MST (Kruskal): %.2fs\n", times["mst"] / trials);
-    printf("Average time for all procedure: %.2fs\n", ((double)(clock() - tStart)/CLOCKS_PER_SEC) / trials);
-    printf("Overall program time taken (for all trials): %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
-    return 0;
 }
-*/
