@@ -265,9 +265,12 @@ int main(int argc, char **argv) {
         cout << "theoretically: " << (n * (n - 1) * (n - 2) / 6) * p * p * p << endl;
         cout << "experimentally: " << endl;
         ld total_res = 0;
-        while(tests--){
+        for(int i = 0; i < tests; i++) {
             ll res = count_triangles(p, n);
-            cout << res << ", ";
+            cout << res;
+            if(i < tests - 1) {
+                cout << ", ";
+            }
             total_res += res;
         }
         cout << endl << "average: " << total_res / tests << endl;
