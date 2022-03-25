@@ -270,7 +270,7 @@ int main(int argc, char **argv) {
             cout << res << ", ";
             total_res += res;
         }
-        cout << endl << "average: " << total_res / 10 << endl;
+        cout << endl << "average: " << total_res / tests << endl;
     }
 
     //for finding optimal split
