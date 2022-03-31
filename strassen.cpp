@@ -80,39 +80,42 @@ vector<vector<ll>> strassen_mat_mult(point p1, point p2, int len, int split_poin
     point G(x2, mid_y2);
     point H(mid_x2, mid_y2);
 
+    //we indicated additional operations for "transforming back" to out initial matrix with (*)
+    // those give us theoretical bound of 25 rather than 16
+
     add_elements_inside(F, H, len / 2, -1, 2);
     vector<vector<ll>> prod1 = strassen_mat_mult(A, F, len / 2, split_point);
-    add_elements_inside(F, H, len / 2, +1, 2);
+    add_elements_inside(F, H, len / 2, +1, 2); // (*)
 
     add_elements_inside(A, B, len / 2, +1, 1);
     vector<vector<ll>> prod2 = strassen_mat_mult(A, H, len / 2, split_point);
-    add_elements_inside(A, B, len / 2, -1, 1);
+    add_elements_inside(A, B, len / 2, -1, 1); // (*)
 
     add_elements_inside(C, D, len / 2, +1, 1);
     vector<vector<ll>> prod3 = strassen_mat_mult(C, E, len / 2, split_point);
-    add_elements_inside(C, D, len / 2, -1, 1);
+    add_elements_inside(C, D, len / 2, -1, 1); // (*)
 
     add_elements_inside(G, E, len / 2, -1, 2);
     vector<vector<ll>> prod4 = strassen_mat_mult(D, G, len / 2, split_point);
-    add_elements_inside(G, E, len / 2, +1, 2);
+    add_elements_inside(G, E, len / 2, +1, 2); // (*)
 
     add_elements_inside(A, D, len / 2, +1, 1);
     add_elements_inside(E, H, len / 2, +1, 2);
     vector<vector<ll>> prod5 = strassen_mat_mult(A, E, len / 2, split_point);
-    add_elements_inside(A, D, len / 2, -1, 1);
-    add_elements_inside(E, H, len / 2, -1, 2);
+    add_elements_inside(A, D, len / 2, -1, 1); // (*)
+    add_elements_inside(E, H, len / 2, -1, 2); // (*)
 
     add_elements_inside(B, D, len / 2, -1, 1);
     add_elements_inside(G, H, len / 2, +1, 2);
     vector<vector<ll>> prod6 = strassen_mat_mult(B, G, len / 2, split_point);
-    add_elements_inside(B, D, len / 2, +1, 1);
-    add_elements_inside(G, H, len / 2, -1, 2);
+    add_elements_inside(B, D, len / 2, +1, 1); // (*)
+    add_elements_inside(G, H, len / 2, -1, 2); // (*)
 
     add_elements_inside(C, A, len / 2, -1, 1);
     add_elements_inside(E, F, len / 2, +1, 2);
     vector<vector<ll>> prod7 = strassen_mat_mult(C, E, len / 2, split_point);
-    add_elements_inside(C, A, len / 2, +1, 1);
-    add_elements_inside(E, F, len / 2, -1, 2);
+    add_elements_inside(C, A, len / 2, +1, 1); // (*)
+    add_elements_inside(E, F, len / 2, -1, 2); // (*)
 
     vector<vector<ll>> ans(len);
     for(int i = 0; i < len; i++){
@@ -141,20 +144,23 @@ vector<vector<ll>> strassen_mat_mult(point p1, point p2, int len, int split_poin
 }
 
 ll count_triangles(ld p, int n) {
+    input1.clear(), input2.clear();
     input1.resize(n), input2.resize(n);
+    for(int i = 0; i < n; i++) {
+        input1[i].resize(n, 0), input2[i].resize(n, 0);
+    }
     for (int i = 0; i < n; ++i) {
-        input1[i].resize(n, 0);
-        input2[i].resize(n, 0);
-        for (int j = 0; j < n; j++) {
-            if (j != i) {
-                auto indicator = (long double) rand() / RAND_MAX;
-                if (indicator < p) {
-                    input1[i][j] = 1;
-                } else {
-                    input1[i][j] = 0;
-                }
-                input2[i][j] = input1[i][j];
+        for (int j = i + 1; j < n; j++) {
+            auto indicator = (long double) rand() / RAND_MAX;
+            if (indicator < p) {
+                input1[i][j] = 1;
+            } else {
+                input1[i][j] = 0;
             }
+            input1[j][i] = input1[i][j];
+
+            input2[i][j] = input1[i][j];
+            input2[j][i] = input1[i][j];
         }
     }
     vector<vector<ll>> squared = strassen_mat_mult(point(0, 0), point(0,0), n, 64);
@@ -172,6 +178,38 @@ ll count_triangles(ld p, int n) {
 }
 
 int find_optimal_split(int dimension) {
+    int n = 1;
+    while (n < dimension) {
+        n *= 2;
+    }
+    input1.resize(n), input2.resize(n);
+    for (int i = 0; i < n; ++i) {
+        input1[i].resize(n, 0), input2[i].resize(n, 0);
+        for (int j = 0; j < n; j++) {
+            input1[i][j] = rand() % 5;
+            input2[i][j] = rand() % 5;
+        }
+    }
+
+    clock_t tStart_trivial = clock();
+    vector<vector<ll>> res_trivial = trivial_mat_mult(0, 0, 0, 0, n);
+    double time_min = (double) (clock() - tStart_trivial) / CLOCKS_PER_SEC;
+    int min_index = n;
+
+    for (int i = 1; i < n; i *= 2) {
+        clock_t tStart = clock();
+        vector<vector<ll>> res_strassen = strassen_mat_mult(point(0, 0), point(0, 0), n, i);
+        double time_strassen = (double) (clock() - tStart) / CLOCKS_PER_SEC;
+
+        if (time_strassen <= time_min) {
+            min_index = i;
+            time_min = time_strassen;
+        }
+    }
+    return min_index;
+}
+
+int find_first_cross(int dimension) {
     int n = 1;
     while (n < dimension) {
         n *= 2;
