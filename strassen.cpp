@@ -314,6 +314,30 @@ int main(int argc, char **argv) {
         cout << endl << "average: " << total_res / tests << endl;
     }
 
+    if(!strcmp(argv[1], "test")) {
+        int n = 256;
+        int tests = 5;
+        while(tests--) {
+            input1.resize(n), input2.resize(n);
+            for (int i = 0; i < n; ++i) {
+                input1[i].resize(n, 0), input2[i].resize(n, 0);
+                for (int j = 0; j < n; j++) {
+                    input1[i][j] = rand() % 1000;
+                    input2[i][j] = rand() % 1000;
+                }
+            }
+            vector<vector<ll>> res_strassen = strassen_mat_mult(point(0, 0), point(0, 0), n, 32);
+            vector<vector<ll>> res_trivial = trivial_mat_mult(0, 0, 0, 0, n);
+            for (int i = 0; i < n; ++i) {
+                for(int j = 0; j < n; j++) {
+                    assert(res_trivial[i][j] == res_strassen[i][j]);
+                }
+            }
+        }
+        cout << "test successful" << endl;
+        return 0;
+    }
+
     //for finding optimal split
     if(!strcmp(argv[1], "spl")) {
         if (argc >= 3) {
