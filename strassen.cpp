@@ -347,7 +347,7 @@ int main(int argc, char **argv) {
             vector<int> n_vec = {4, 8, 16, 32, 64, 128, 256, 512, 1024};
             cout << "optimal values for different n: " << endl;
             for(int n: n_vec) {
-                cout << "n = " << n << ": " << find_optimal_split(n) << endl;
+                cout << "n = " << n << ": " << find_first_cross(n) << endl;
             }
         }
     }
